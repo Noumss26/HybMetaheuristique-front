@@ -1,65 +1,91 @@
-import Image from "next/image";
+// app/page.tsx
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import Form from "@/components/Form";
+import Result from "@/components/Result";
+import CityGraph from "@/components/CityGraphe";
+import { optimizeRoute } from "@/services/api";
+import type { City, OptimizeResponse } from "@/services/api";
+
+export default function HomePage() {
+  const [result, setResult]   = useState<OptimizeResponse | null>(null);
+  const [error, setError]     = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [cities, setCities]   = useState<City[] | null>(null);
+
+const handleOptimize = async (
+  selected: City[],
+  startCity: string | null,
+  algorithm: "antcolony" | "genetic" | "hybrid" | "local_search"  // ← ajouter
+) => {
+  setLoading(true);
+  setError(null);
+  setResult(null);
+  setCities(selected);
+
+  try {
+    const data = await optimizeRoute({
+      cities: selected,
+      algorithm,          // ← dynamique
+      start_city: startCity,
+    });
+    setResult(data);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "Erreur inattendue.");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-[#080B12]">
+      {/* Background grid */}
+      <div
+        className="pointer-events-none fixed inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+        {/* ── Hero ── */}
+        <header className="mb-12 text-center fade-up">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/5 px-4 py-1.5 font-mono text-xs tracking-widest text-sky-400 uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+            Optimisation · Livraison
+          </span>
+          <h1 className="mt-4 text-6xl font-bold tracking-tight text-white sm:text-7xl">
+            Route<span className="text-sky-400">Opt</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-4 text-base text-slate-400 max-w-md mx-auto leading-relaxed">
+            Saisissez vos villes, laissez le backend calculer l'itinéraire le plus court.
           </p>
+        </header>
+
+        {/* ── Main grid ── */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="fade-up animation-delay-100">
+            <Form onSubmit={handleOptimize} loading={loading} />
+          </div>
+          <div className="flex flex-col gap-6 fade-up animation-delay-200">
+            <Result result={result} error={error} />
+            {cities && (
+              <CityGraph cities={cities} optimalPath={result?.optimal_path ?? []} />
+            )}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* ── Footer ── */}
+        <footer className="mt-16 text-center font-mono text-xs text-slate-600">
+          Frontend Next.js ·{" "}
+          <span className="rounded border border-slate-700 bg-slate-800/50 px-2 py-0.5 text-sky-500">
+            POST /optimize
+          </span>{" "}
+          FastAPI
+        </footer>
+      </div>
+    </main>
   );
 }

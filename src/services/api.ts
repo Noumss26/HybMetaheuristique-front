@@ -1,0 +1,56 @@
+// services/api.ts
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+// ── Types ────────────────────────────────────────────────
+
+export type Algorithm = "antcolony" | "genetic" | "hybrid" | "local_search";
+
+export interface City {
+  name: string;
+  x: number;
+  y: number;
+}
+
+export interface OptimizeRequest {
+  cities: City[];
+  algorithm: Algorithm;
+  start_city?: string | null;
+}
+
+export interface OptimizeResponse {
+  optimal_path: string[];
+  total_distance: number;
+  algorithm_used: Algorithm;
+  execution_time_ms: number;
+  start_city: string | null;
+  random_path: string[];
+  random_distance: number;
+  improvement_percent: number;
+}
+
+// ── API call ─────────────────────────────────────────────
+
+export async function optimizeRoute(
+  payload: OptimizeRequest
+): Promise<OptimizeResponse> {
+  const response = await fetch(`${API_BASE_URL}/optimize`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      cities: payload.cities,
+      algorithm: payload.algorithm,
+      start_city: payload.start_city ?? null,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Erreur serveur (${response.status})`);
+  }
+
+  return response.json();
+}

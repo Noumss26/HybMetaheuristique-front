@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* ── Tailwind v4 : thème custom via CSS variables ── */
+@theme {
+  --color-bg:          #080B12;
+  --color-bg-surface:  #0F1521;
+  --color-bg-card:     #131C2E;
+  --color-bg-hover:    #1A2540;
+
+  --color-brand:       #38BDF8;
+  --color-brand-dim:   rgba(56, 189, 248, 0.12);
+  --color-brand-glow:  rgba(56, 189, 248, 0.30);
+
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --shadow-glow:    0 0 24px rgba(56,189,248,0.25);
+  --shadow-glow-sm: 0 0 12px rgba(56,189,248,0.15);
+  --shadow-card:    0 4px 32px rgba(0,0,0,0.4);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: #f1f5f9;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+
+  .path-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawPath 0.8s ease forwards;
+  }
+
+  .fade-up {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .shadow-glow    { box-shadow: var(--shadow-glow); }
+  .shadow-glow-sm { box-shadow: var(--shadow-glow-sm); }
+  .shadow-card    { box-shadow: var(--shadow-card); }
+}
+
+@keyframes drawPath {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
