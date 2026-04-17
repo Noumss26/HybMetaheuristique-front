@@ -6,37 +6,46 @@ import Form from "@/components/Form";
 import Result from "@/components/Result";
 import CityGraph from "@/components/CityGraphe";
 import { optimizeRoute } from "@/services/api";
-import type { City, OptimizeResponse } from "@/services/api";
+import type { Algorithm, City, Edge, OptimizeResponse } from "@/services/api";
 
 export default function HomePage() {
   const [result, setResult]   = useState<OptimizeResponse | null>(null);
   const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [cities, setCities]   = useState<City[] | null>(null);
+  const [edges, setEdges]     = useState<Edge[] | null>(null);
 
-const handleOptimize = async (
-  selected: City[],
-  startCity: string | null,
-  algorithm: "antcolony" | "genetic" | "hybrid" | "local_search"  // ← ajouter
-) => {
-  setLoading(true);
-  setError(null);
-  setResult(null);
-  setCities(selected);
+  // ── Handler principal ────────────────────────────────
+  const handleOptimize = async (
+    selected: City[],
+    startCity: string | null,
+    algorithm: Algorithm,
+    selectedEdges: Edge[] | null,   // null = graphe complet
+  ) => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setCities(selected);
+    setEdges(selectedEdges);
 
-  try {
-    const data = await optimizeRoute({
-      cities: selected,
-      algorithm,          // ← dynamique
-      start_city: startCity,
-    });
-    setResult(data);
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Erreur inattendue.");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const data = await optimizeRoute({
+        cities: selected,
+        algorithm,
+        start_city: startCity,
+        // undefined → backend reçoit graphe complet (champ absent du body)
+        // Edge[]    → backend reçoit graphe partiel
+        edges: selectedEdges ?? undefined,
+      });
+      setResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inattendue.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Rendu ────────────────────────────────────────────
   return (
     <main className="min-h-screen bg-[#080B12]">
       {/* Background grid */}
@@ -72,7 +81,11 @@ const handleOptimize = async (
           <div className="flex flex-col gap-6 fade-up animation-delay-200">
             <Result result={result} error={error} />
             {cities && (
-              <CityGraph cities={cities} optimalPath={result?.optimal_path ?? []} />
+              <CityGraph
+                cities={cities}
+                optimalPath={result?.optimal_path ?? []}
+                edges={edges ?? undefined}
+              />
             )}
           </div>
         </div>

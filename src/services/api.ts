@@ -13,10 +13,25 @@ export interface City {
   y: number;
 }
 
+/**
+ * Connexion bidirectionnelle entre deux villes.
+ * city_a <-> city_b (les deux sens sont toujours valides).
+ * Correspond exactement au modèle Edge du backend.
+ */
+export interface Edge {
+  city_a: string;
+  city_b: string;
+}
+
 export interface OptimizeRequest {
   cities: City[];
   algorithm: Algorithm;
   start_city?: string | null;
+  /**
+   * Si fourni → graphe partiel (seules ces connexions sont autorisées).
+   * Si null/absent → graphe complet (comportement par défaut).
+   */
+  edges?: Edge[] | null;
 }
 
 export interface OptimizeResponse {
@@ -35,16 +50,21 @@ export interface OptimizeResponse {
 export async function optimizeRoute(
   payload: OptimizeRequest
 ): Promise<OptimizeResponse> {
+  const body: Record<string, unknown> = {
+    cities: payload.cities,
+    algorithm: payload.algorithm,
+    start_city: payload.start_city ?? null,
+  };
+
+  // N'envoyer edges que si explicitement fourni (null = graphe complet)
+  if (payload.edges !== undefined) {
+    body.edges = payload.edges;
+  }
+
   const response = await fetch(`${API_BASE_URL}/optimize`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      cities: payload.cities,
-      algorithm: payload.algorithm,
-      start_city: payload.start_city ?? null,
-    }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
