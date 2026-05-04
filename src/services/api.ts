@@ -34,6 +34,12 @@ export interface OptimizeRequest {
   edges?: Edge[] | null;
 }
 
+export interface AlgoBreakdown {
+  name: Algorithm;
+  distance: number;
+  time_ms: number;
+}
+
 export interface OptimizeResponse {
   optimal_path: string[];
   total_distance: number;
@@ -43,6 +49,7 @@ export interface OptimizeResponse {
   random_path: string[];
   random_distance: number;
   improvement_percent: number;
+  breakdown?: AlgoBreakdown[];
 }
 
 // ── API call ─────────────────────────────────────────────

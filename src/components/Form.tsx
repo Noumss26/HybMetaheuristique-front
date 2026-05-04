@@ -24,10 +24,10 @@ const DEFAULT_CITIES: City[] = [
 ];
 
 const ALGORITHM_OPTIONS: { value: Algorithm; label: string }[] = [
-  { value: "hybrid",       label: "🔀 Hybrid (ACO + GA + 2-opt)" },
-  { value: "antcolony",    label: "🐜 Ant Colony"                },
-  { value: "genetic",      label: "🧬 Génétique"                 },
-  { value: "local_search", label: "🔍 Local Search (2-opt)"      },
+  { value: "hybrid",       label: "Hybrid  ·  ACO + GA + 2-opt" },
+  { value: "antcolony",    label: "Ant Colony Optimization"     },
+  { value: "genetic",      label: "Genetic Algorithm"           },
+  { value: "local_search", label: "Local Search  ·  2-opt"      },
 ];
 
 // ── Types ────────────────────────────────────────────────
@@ -148,9 +148,14 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
   // ── Arêtes ───────────────────────────────────────────
 
+  // Auto-activer le mode graphe partiel dès qu'une arête est ajoutée.
+  // Évite le bug silencieux où l'utilisateur configure des connexions
+  // mais oublie de basculer le toggle → backend reçoit edges=null
+  // et utilise un graphe complet, ignorant la configuration de l'utilisateur.
   const handleAutoGenerate = () => {
     setEdgeError(null);
     setEdges(generateEdges(cities, kNeighbors));
+    setUsePartialGraph(true);
   };
 
   const handleAddEdge = () => {
@@ -161,6 +166,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
     if (edgeExists(edges, city_a, city_b)) { setEdgeError("Cette connexion existe déjà."); return; }
     setEdges(prev => [...prev, { city_a, city_b }]);
     setNewEdge({ city_a: "", city_b: "" });
+    setUsePartialGraph(true);  // garantit que les arêtes seront envoyées au backend
   };
 
   const handleRemoveEdge = (index: number) =>
@@ -185,30 +191,41 @@ export default function Form({ onSubmit, loading }: FormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl border border-white/[0.07] bg-[#0F1521] p-6 shadow-[0_4px_32px_rgba(0,0,0,0.4)]"
+      className="rounded-2xl border border-white/[0.06] bg-gradient-to-br from-[#0F1521] to-[#0B121F] shadow-[0_4px_32px_rgba(0,0,0,0.5)] overflow-hidden"
     >
       {/* Header */}
-      <div className="mb-5 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-200 uppercase tracking-wider">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-400/10 text-sky-400 text-xs">📍</span>
+      <div className="flex items-center justify-between border-b border-white/[0.05] px-6 py-4">
+        <h2 className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-400/10 ring-1 ring-sky-400/20">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+          </span>
           Villes à livrer
+          <span className="font-mono text-[10px] tracking-normal normal-case text-slate-600 ml-1">
+            {cities.length}
+          </span>
         </h2>
         <button
           type="button"
           onClick={() => { setCities(DEFAULT_CITIES); setEdges([]); }}
-          className="rounded-lg border border-white/[0.07] px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/20 hover:text-slate-200"
+          className="rounded-lg border border-white/[0.07] px-3 py-1.5 text-[11px] text-slate-400 transition hover:border-white/20 hover:bg-white/[0.03] hover:text-slate-200"
         >
           Réinitialiser
         </button>
       </div>
 
+      <div className="px-6 py-5">
+
       {/* Liste des villes */}
-      <div className="mb-4 max-h-64 overflow-y-auto space-y-2 pr-1">
+      <div className="mb-4 max-h-64 overflow-y-auto space-y-1.5 pr-1">
         {cities.map((city, i) => (
           <div key={i}
-            className="flex items-center gap-2 rounded-xl border border-white/[0.05] bg-[#131C2E] px-3 py-2.5 transition hover:border-white/10"
+            className="group flex items-center gap-2 rounded-xl border border-white/[0.04] bg-white/[0.015] px-3 py-2.5 transition hover:border-white/10 hover:bg-white/[0.03]"
           >
-            <span className="font-mono text-xs font-bold text-sky-400 w-5 text-center shrink-0">{i + 1}</span>
+            <span className="font-mono text-[10px] font-bold text-sky-400 w-6 text-center shrink-0 tabular-nums">
+              {String(i + 1).padStart(2, "0")}
+            </span>
 
             {editIndex === i ? (
               <>
@@ -218,17 +235,23 @@ export default function Form({ onSubmit, loading }: FormProps) {
                   value={city.x} onChange={e => handleFieldChange(i, "x", e.target.value)} placeholder="X" />
                 <input type="number" className="w-16 rounded-lg border border-white/10 bg-[#080B12] px-2 py-1.5 text-sm font-mono text-slate-200 outline-none focus:border-sky-400/60 transition"
                   value={city.y} onChange={e => handleFieldChange(i, "y", e.target.value)} placeholder="Y" />
-                <button type="button" onClick={() => setEditIndex(null)}
-                  className="ml-1 text-emerald-400 hover:text-emerald-300 transition text-lg leading-none">✓</button>
+                <button type="button" onClick={() => setEditIndex(null)} title="Valider"
+                  className="ml-1 rounded-md p-1 text-emerald-400 hover:bg-emerald-400/10 hover:text-emerald-300 transition">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
               </>
             ) : (
               <>
                 <span className="flex-1 text-sm font-medium text-slate-200">{city.name}</span>
-                <span className="font-mono text-xs text-slate-500">({city.x}, {city.y})</span>
-                <button type="button" onClick={() => setEditIndex(i)}
-                  className="ml-1 rounded-md p-1 text-slate-500 transition hover:bg-white/5 hover:text-slate-300" title="Modifier">✏️</button>
-                <button type="button" onClick={() => handleRemoveCity(i)}
-                  className="rounded-md p-1 text-slate-600 transition hover:bg-red-500/10 hover:text-red-400" title="Supprimer">✕</button>
+                <span className="font-mono text-[10px] text-slate-500 tabular-nums">{city.x}, {city.y}</span>
+                <button type="button" onClick={() => setEditIndex(i)} title="Modifier"
+                  className="rounded-md p-1 text-slate-500 opacity-0 group-hover:opacity-100 transition hover:bg-white/5 hover:text-slate-200">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button type="button" onClick={() => handleRemoveCity(i)} title="Supprimer"
+                  className="rounded-md p-1 text-slate-600 opacity-0 group-hover:opacity-100 transition hover:bg-red-500/10 hover:text-red-400">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </>
             )}
           </div>
@@ -259,19 +282,20 @@ export default function Form({ onSubmit, loading }: FormProps) {
       <div className="mb-5 border-t border-white/[0.05]" />
 
       {/* Toggle graphe partiel */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.015] px-4 py-3">
         <div>
-          <p className="text-sm font-semibold text-slate-200">Connexions personnalisées</p>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-[13px] font-semibold text-slate-200">Connexions personnalisées</p>
+          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
             {usePartialGraph
-              ? "Seules les connexions définies ci-dessous sont autorisées."
-              : "Graphe complet — toutes les villes sont reliées entre elles."}
+              ? "Seules les connexions définies sont autorisées"
+              : "Graphe complet — toutes les villes sont reliées"}
           </p>
         </div>
         <button
           type="button"
           onClick={() => { setUsePartialGraph(p => !p); setEdgeError(null); }}
-          className={`relative h-6 w-11 rounded-full transition-colors ${usePartialGraph ? "bg-sky-400" : "bg-slate-700"}`}
+          className={`relative h-6 w-11 rounded-full transition-colors ${usePartialGraph ? "bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.4)]" : "bg-slate-700"}`}
+          aria-label="Activer le graphe partiel"
         >
           <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${usePartialGraph ? "translate-x-5" : "translate-x-0"}`} />
         </button>
@@ -279,18 +303,21 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
       {/* Section arêtes */}
       {usePartialGraph && (
-        <div className="mb-5 rounded-xl border border-amber-400/10 bg-amber-400/5 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
-            <span>🔗</span>
+        <div className="mb-5 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
             Connexions autorisées
-            <span className="ml-auto font-mono font-normal text-amber-400/60">
+            <span className="ml-auto font-mono text-[10px] tracking-normal normal-case text-amber-400/60">
               {edges.length} lien{edges.length !== 1 ? "s" : ""}
             </span>
           </h3>
 
           {/* Génération automatique */}
-          <div className="mb-4 rounded-lg border border-white/[0.05] bg-[#0F1521] p-3">
-            <p className="mb-1 text-xs font-semibold text-slate-300">⚡ Génération automatique</p>
+          <div className="mb-4 rounded-lg border border-white/[0.05] bg-[#0B121F] p-3">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300">Génération automatique</p>
             <p className="mb-3 text-xs text-slate-500 leading-relaxed">
               Connecte chaque ville à ses{" "}
               <strong className="text-amber-400">{kNeighbors}</strong> voisines les plus proches,
@@ -310,37 +337,39 @@ export default function Form({ onSubmit, loading }: FormProps) {
             <button
               type="button"
               onClick={handleAutoGenerate}
-              className="w-full rounded-lg border border-amber-400/30 bg-amber-400/10 py-2 text-sm font-semibold text-amber-400 transition hover:border-amber-400/50 hover:bg-amber-400/20"
+              className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-2 text-xs font-semibold uppercase tracking-wider text-amber-400 transition hover:border-amber-400/50 hover:bg-amber-400/[0.15]"
             >
-              🔄 Générer les connexions ({cities.length} villes)
+              Générer · {cities.length} villes
             </button>
 
             {edges.length > 0 && (
-              <p className="mt-2 text-center text-xs text-emerald-400/70">
-                ✓ {edges.length} connexions générées — graphe connexe garanti
+              <p className="mt-2 text-center text-[11px] text-emerald-400/70">
+                {edges.length} connexions · graphe connexe garanti
               </p>
             )}
           </div>
 
           {/* Liste des arêtes */}
           {edges.length > 0 && (
-            <div className="mb-3 max-h-40 overflow-y-auto space-y-1.5 pr-1">
+            <div className="mb-3 max-h-40 overflow-y-auto space-y-1 pr-1">
               {edges.map((edge, i) => (
                 <div key={i}
-                  className="flex items-center gap-2 rounded-lg border border-white/[0.05] bg-[#0F1521] px-3 py-2 text-xs">
+                  className="group flex items-center gap-2 rounded-lg border border-white/[0.04] bg-[#0B121F] px-3 py-1.5 text-xs">
                   <span className="text-slate-300 font-medium">{edge.city_a}</span>
-                  <span className="text-amber-400/60">↔</span>
+                  <span className="text-amber-400/50 font-mono">↔</span>
                   <span className="text-slate-300 font-medium">{edge.city_b}</span>
-                  <button type="button" onClick={() => handleRemoveEdge(i)}
-                    className="ml-auto text-slate-600 hover:text-red-400 transition" title="Supprimer">✕</button>
+                  <button type="button" onClick={() => handleRemoveEdge(i)} title="Supprimer"
+                    className="ml-auto rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100 hover:text-red-400 transition">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
           {edges.length === 0 && (
-            <p className="mb-3 text-xs text-amber-400/50 italic">
-              ⚠️ Aucune connexion — cliquez sur "Générer" pour éviter l'erreur de connexité.
+            <p className="mb-3 text-[11px] text-amber-400/60 italic">
+              Aucune connexion — cliquez sur Générer pour éviter l'erreur de connexité.
             </p>
           )}
 
@@ -380,9 +409,9 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
       {/* Ville de départ */}
       <div className="mb-4">
-        <label className="block mb-2 text-sm text-slate-400">Ville de départ</label>
+        <label className="block mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Ville de départ</label>
         <select
-          className="w-full rounded-xl border border-white/[0.07] bg-[#131C2E] px-3 py-2 text-sm text-slate-200 outline-none focus:border-sky-400/50 transition"
+          className="w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-400/50 focus:bg-white/[0.04] transition"
           value={startCity ?? ""} onChange={e => setStartCity(e.target.value || null)}
         >
           <option value="">Automatique</option>
@@ -392,9 +421,9 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
       {/* Algorithme */}
       <div className="mb-5">
-        <label className="block mb-2 text-sm text-slate-400">Algorithme</label>
+        <label className="block mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Algorithme</label>
         <select
-          className="w-full rounded-xl border border-white/[0.07] bg-[#131C2E] px-3 py-2 text-sm text-slate-200 outline-none focus:border-sky-400/50 transition"
+          className="w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-400/50 focus:bg-white/[0.04] transition"
           value={algorithm} onChange={e => setAlgorithm(e.target.value as Algorithm)}
         >
           {ALGORITHM_OPTIONS.map(opt => (
@@ -408,10 +437,10 @@ export default function Form({ onSubmit, loading }: FormProps) {
         type="submit"
         disabled={loading || cities.length < 2}
         className={`
-          relative w-full overflow-hidden rounded-xl px-6 py-3.5 text-sm font-bold tracking-wide transition-all
+          group relative w-full overflow-hidden rounded-xl px-6 py-3.5 text-[13px] font-bold uppercase tracking-[0.12em] transition-all duration-300
           ${loading || cities.length < 2
             ? "cursor-not-allowed bg-slate-800 text-slate-500"
-            : "bg-sky-400 text-[#080B12] shadow-[0_0_24px_rgba(56,189,248,0.25)] hover:bg-sky-300 hover:shadow-[0_0_32px_rgba(56,189,248,0.4)] hover:-translate-y-0.5 active:translate-y-0"
+            : "bg-gradient-to-r from-sky-400 to-sky-500 text-[#080B12] shadow-[0_0_24px_rgba(56,189,248,0.25)] hover:shadow-[0_0_36px_rgba(56,189,248,0.5)] hover:-translate-y-0.5 active:translate-y-0"
           }
         `}
       >
@@ -421,18 +450,25 @@ export default function Form({ onSubmit, loading }: FormProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
-            Optimisation en cours…
+            Optimisation en cours
           </span>
         ) : (
-          <span className="flex items-center justify-center gap-2">🚀 Optimiser la route</span>
+          <span className="flex items-center justify-center gap-2">
+            Optimiser la route
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </span>
         )}
       </button>
 
       {cities.length < 2 && (
-        <p className="mt-3 text-center font-mono text-xs text-red-400/70">
+        <p className="mt-3 text-center font-mono text-[11px] text-red-400/70">
           Ajoutez au moins 2 villes pour démarrer.
         </p>
       )}
+
+      </div>
     </form>
   );
 }

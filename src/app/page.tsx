@@ -58,19 +58,30 @@ export default function HomePage() {
         }}
       />
 
-      <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6">
+      <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6">
         {/* ── Hero ── */}
-        <header className="mb-12 text-center fade-up">
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/5 px-4 py-1.5 font-mono text-xs tracking-widest text-sky-400 uppercase">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
-            Optimisation · Livraison
-          </span>
-          <h1 className="mt-4 text-6xl font-bold tracking-tight text-white sm:text-7xl">
-            Route<span className="text-sky-400">Opt</span>
-          </h1>
-          <p className="mt-4 text-base text-slate-400 max-w-md mx-auto leading-relaxed">
-            Saisissez vos villes, laissez le backend calculer l'itinéraire le plus court.
-          </p>
+        <header className="mb-12 fade-up">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-sky-400/20 bg-sky-400/[0.04] px-3 py-1 font-mono text-[10px] tracking-[0.2em] text-sky-400 uppercase">
+                <span className="h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                Hybridation métaheuristique
+              </span>
+              <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl">
+                Route<span className="bg-gradient-to-r from-sky-400 to-sky-300 bg-clip-text text-transparent">Opt</span>
+              </h1>
+              <p className="mt-3 max-w-md text-sm text-slate-400 leading-relaxed">
+                Optimisation d'itinéraires de livraison par <span className="text-slate-300">ACO</span>, <span className="text-slate-300">algorithme génétique</span>, <span className="text-slate-300">2-opt</span> et leur <span className="text-slate-300">hybridation</span>.
+              </p>
+            </div>
+            <div className="hidden md:flex flex-col items-end gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+              <span className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Backend en ligne
+              </span>
+              <span className="text-slate-600 normal-case tracking-normal">localhost:8000</span>
+            </div>
+          </div>
         </header>
 
         {/* ── Main grid ── */}
@@ -91,12 +102,12 @@ export default function HomePage() {
         </div>
 
         {/* ── Footer ── */}
-        <footer className="mt-16 text-center font-mono text-xs text-slate-600">
-          Frontend Next.js ·{" "}
-          <span className="rounded border border-slate-700 bg-slate-800/50 px-2 py-0.5 text-sky-500">
+        <footer className="mt-16 flex items-center justify-between border-t border-white/[0.04] pt-6 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-600">
+          <span>Next.js · React 19</span>
+          <span className="rounded border border-slate-800 bg-slate-900/50 px-2 py-0.5 text-sky-500/80 normal-case tracking-normal">
             POST /optimize
-          </span>{" "}
-          FastAPI
+          </span>
+          <span>FastAPI · Python 3.14</span>
         </footer>
       </div>
     </main>
