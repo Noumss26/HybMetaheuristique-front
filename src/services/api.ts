@@ -7,6 +7,13 @@ const API_BASE_URL =
 
 export type Algorithm = "antcolony" | "genetic" | "hybrid" | "local_search";
 
+/**
+ * Mode de sélection envoyé au backend :
+ *   • "all" → benchmark des 4 algos (défaut)
+ *   • Algorithm spécifique → focus sur un seul
+ */
+export type AlgorithmSelection = Algorithm | "all";
+
 export interface City {
   name: string;
   x: number;
@@ -25,7 +32,7 @@ export interface Edge {
 
 export interface OptimizeRequest {
   cities: City[];
-  algorithm: Algorithm;
+  algorithm: AlgorithmSelection;
   start_city?: string | null;
   /**
    * Si fourni → graphe partiel (seules ces connexions sont autorisées).

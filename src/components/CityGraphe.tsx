@@ -146,11 +146,12 @@ export default function CityGraph({ cities, optimalPath, edges }: CityGraphProps
               <stop offset="100%" stopColor="#38BDF8" stopOpacity="0.6" />
             </linearGradient>
 
-            {/* Pin GPS pour ville de départ */}
+            {/* Pin GPS pour ville de départ — palette sky pour cohérence */}
             <symbol id="pin" viewBox="0 0 24 32">
               <path d="M12 0 C5.4 0 0 5.4 0 12 c0 9 12 20 12 20 s12-11 12-20 C24 5.4 18.6 0 12 0 z"
-                fill="#F59E0B" stroke="#FCD34D" strokeWidth="1.5" />
+                fill="#0EA5E9" stroke="#7DD3FC" strokeWidth="1.5" />
               <circle cx="12" cy="12" r="4.5" fill="#080B12" />
+              <circle cx="12" cy="12" r="2" fill="#7DD3FC" />
             </symbol>
           </defs>
 
@@ -268,12 +269,12 @@ export default function CityGraph({ cities, optimalPath, edges }: CityGraphProps
                   </>
                 )}
 
-                {/* Label */}
+                {/* Label — palette neutre pour la sobriété pro */}
                 <text
                   x={city.svgX}
                   y={isStart ? city.svgY - 32 : city.svgY - 16}
                   textAnchor="middle"
-                  fill={active ? "#CBD5E1" : "#475569"}
+                  fill={active ? (isStart ? "#7DD3FC" : "#CBD5E1") : "#475569"}
                   fontSize={isStart ? "12" : "11"}
                   fontFamily="DM Sans, sans-serif"
                   fontWeight={isStart ? "700" : "600"}

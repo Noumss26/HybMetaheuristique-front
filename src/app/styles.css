@@ -1,15 +1,26 @@
 @import "tailwindcss";
 
-/* ── Tailwind v4 — thème custom via variables CSS ───────────────────── */
+/* ── Tailwind v4 — thème custom via variables CSS ─────────────────────
+   Palette disciplinée :
+   • 1 marque (sky)   — état actif, brand, points clés
+   • 5 neutres slate  — toute la hiérarchie texte/bordures
+   • 1 success (emerald) — gagnant uniquement
+   • 1 error (red)       — erreurs uniquement
+   Pas d'amber, pas de purple : trop de couleur = moins pro.
+*/
 @theme {
-  --color-bg:          #080B12;
-  --color-bg-surface:  #0F1521;
-  --color-bg-card:     #131C2E;
-  --color-bg-hover:    #1A2540;
+  --color-bg-0:  #080B12;   /* canvas */
+  --color-bg-1:  #0B121F;   /* surface base */
+  --color-bg-2:  #0F1521;   /* surface card */
+  --color-bg-3:  #131C2E;   /* surface elevated */
 
-  --color-brand:       #38BDF8;
-  --color-brand-dim:   rgba(56, 189, 248, 0.12);
-  --color-brand-glow:  rgba(56, 189, 248, 0.30);
+  --color-brand:        #38BDF8;
+  --color-brand-strong: #0EA5E9;
+  --color-brand-soft:   rgba(56, 189, 248, 0.08);
+  --color-brand-glow:   rgba(56, 189, 248, 0.30);
+
+  --color-success:      #34D399;
+  --color-error:        #F87171;
 
   --font-sans: 'DM Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;

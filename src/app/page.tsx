@@ -5,8 +5,9 @@ import { useState } from "react";
 import Form from "@/components/Form";
 import Result from "@/components/Result";
 import CityGraph from "@/components/CityGraphe";
+import AlgoBreakdown from "@/components/AlgoBreakdown";
 import { optimizeRoute } from "@/services/api";
-import type { Algorithm, City, Edge, OptimizeResponse } from "@/services/api";
+import type { AlgorithmSelection, City, Edge, OptimizeResponse } from "@/services/api";
 
 export default function HomePage() {
   const [result, setResult]   = useState<OptimizeResponse | null>(null);
@@ -19,7 +20,7 @@ export default function HomePage() {
   const handleOptimize = async (
     selected: City[],
     startCity: string | null,
-    algorithm: Algorithm,
+    algorithm: AlgorithmSelection,
     selectedEdges: Edge[] | null,   // null = graphe complet
   ) => {
     setLoading(true);
@@ -84,22 +85,55 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* ── Main grid ── */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="fade-up animation-delay-100">
+        {/* ── Main layout ──
+             Disposition pro :
+             1. KPI strip horizontal en haut (Result compact)
+             2. Grille 2 colonnes : Form (4/12) + Map (8/12)
+             3. Breakdown 4 algos en pleine largeur sous la grille
+        */}
+
+        {/* 1. KPI strip — visible en premier, scan rapide */}
+        {(result || error) && (
+          <div className="mb-6 fade-up">
+            <Result result={result} error={error} />
+          </div>
+        )}
+
+        {/* 2. Grid : Form ⟷ Map */}
+        <div className="grid gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-5 xl:col-span-4 fade-up animation-delay-100">
             <Form onSubmit={handleOptimize} loading={loading} />
           </div>
-          <div className="flex flex-col gap-6 fade-up animation-delay-200">
-            <Result result={result} error={error} />
-            {cities && (
+          <div className="lg:col-span-7 xl:col-span-8 fade-up animation-delay-200">
+            {cities ? (
               <CityGraph
                 cities={cities}
                 optimalPath={result?.optimal_path ?? []}
                 edges={edges ?? undefined}
               />
+            ) : (
+              <div className="flex h-full min-h-[420px] items-center justify-center rounded-2xl border border-dashed border-white/[0.06] bg-white/[0.01] text-center">
+                <div>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-slate-700 mx-auto mb-3">
+                    <path d="M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3z"/>
+                    <path d="M9 7v13"/><path d="M15 4v13"/>
+                  </svg>
+                  <p className="text-sm text-slate-500">Carte des itinéraires</p>
+                  <p className="mt-1 text-[11px] text-slate-600">
+                    Lancez l'optimisation pour visualiser le tour
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </div>
+
+        {/* 3. Breakdown 4 algos — pleine largeur, sous la grille */}
+        {result?.breakdown && result.breakdown.length > 0 && (
+          <div className="mt-6 fade-up animation-delay-300">
+            <AlgoBreakdown result={result} />
+          </div>
+        )}
 
         {/* ── Footer ── */}
         <footer className="mt-16 flex items-center justify-between border-t border-white/[0.04] pt-6 font-mono text-[10px] uppercase tracking-[0.15em] text-slate-600">

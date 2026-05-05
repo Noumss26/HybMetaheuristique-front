@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Algorithm, City, Edge } from "@/services/api";
+import type { Algorithm, AlgorithmSelection, City, Edge } from "@/services/api";
 
 // ── Constantes ───────────────────────────────────────────
 
@@ -23,11 +23,13 @@ const DEFAULT_CITIES: City[] = [
   { name: "City20", x: 100, y: 320 }, 
 ];
 
-const ALGORITHM_OPTIONS: { value: Algorithm; label: string }[] = [
-  { value: "hybrid",       label: "Hybrid  ·  ACO + GA + 2-opt" },
-  { value: "antcolony",    label: "Ant Colony Optimization"     },
-  { value: "genetic",      label: "Genetic Algorithm"           },
-  { value: "local_search", label: "Local Search  ·  2-opt"      },
+// Options du sélecteur. "all" = mode benchmark (lance les 4 et compare).
+const ALGORITHM_OPTIONS: { value: AlgorithmSelection; label: string; group?: string }[] = [
+  { value: "all",          label: "Comparaison · les 4 algorithmes",   group: "Benchmark" },
+  { value: "hybrid",       label: "Hybrid · ACO + GA + 2-opt",         group: "Focus"     },
+  { value: "antcolony",    label: "Ant Colony Optimization",           group: "Focus"     },
+  { value: "genetic",      label: "Genetic Algorithm",                 group: "Focus"     },
+  { value: "local_search", label: "Local Search · 2-opt",              group: "Focus"     },
 ];
 
 // ── Types ────────────────────────────────────────────────
@@ -36,7 +38,7 @@ interface FormProps {
   onSubmit: (
     cities: City[],
     startCity: string | null,
-    algorithm: Algorithm,
+    algorithm: AlgorithmSelection,
     edges: Edge[] | null,
   ) => void;
   loading: boolean;
@@ -118,7 +120,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
   const [newCity,    setNewCity]    = useState<NewCityState>({ name: "", x: "", y: "" });
   const [editIndex,  setEditIndex]  = useState<number | null>(null);
   const [startCity,  setStartCity]  = useState<string | null>(null);
-  const [algorithm,  setAlgorithm]  = useState<Algorithm>("hybrid");
+  const [algorithm,  setAlgorithm]  = useState<AlgorithmSelection>("all");
 
   const [usePartialGraph, setUsePartialGraph] = useState(false);
   const [edges,      setEdges]      = useState<Edge[]>([]);
@@ -303,14 +305,14 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
       {/* Section arêtes */}
       {usePartialGraph && (
-        <div className="mb-5 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-400">
+        <div className="mb-5 rounded-xl border border-sky-400/15 bg-sky-400/[0.04] p-4">
+          <h3 className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-sky-400">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
               <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
             </svg>
             Connexions autorisées
-            <span className="ml-auto font-mono text-[10px] tracking-normal normal-case text-amber-400/60">
+            <span className="ml-auto font-mono text-[10px] tracking-normal normal-case text-sky-400/60">
               {edges.length} lien{edges.length !== 1 ? "s" : ""}
             </span>
           </h3>
@@ -320,7 +322,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-300">Génération automatique</p>
             <p className="mb-3 text-xs text-slate-500 leading-relaxed">
               Connecte chaque ville à ses{" "}
-              <strong className="text-amber-400">{kNeighbors}</strong> voisines les plus proches,
+              <strong className="text-sky-400">{kNeighbors}</strong> voisines les plus proches,
               puis garantit la connexité du graphe via un arbre couvrant minimal.
             </p>
 
@@ -329,15 +331,15 @@ export default function Form({ onSubmit, loading }: FormProps) {
               <input
                 type="range" min={1} max={Math.min(10, cities.length - 1)} value={kNeighbors}
                 onChange={e => setKNeighbors(Number(e.target.value))}
-                className="flex-1 accent-amber-400"
+                className="flex-1 accent-sky-400"
               />
-              <span className="font-mono text-sm text-amber-400 w-4 text-center">{kNeighbors}</span>
+              <span className="font-mono text-sm text-sky-400 w-4 text-center">{kNeighbors}</span>
             </div>
 
             <button
               type="button"
               onClick={handleAutoGenerate}
-              className="w-full rounded-lg border border-amber-400/30 bg-amber-400/[0.08] py-2 text-xs font-semibold uppercase tracking-wider text-amber-400 transition hover:border-amber-400/50 hover:bg-amber-400/[0.15]"
+              className="w-full rounded-lg border border-sky-400/30 bg-sky-400/[0.08] py-2 text-xs font-semibold uppercase tracking-wider text-sky-400 transition hover:border-sky-400/50 hover:bg-sky-400/[0.15]"
             >
               Générer · {cities.length} villes
             </button>
@@ -356,7 +358,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
                 <div key={i}
                   className="group flex items-center gap-2 rounded-lg border border-white/[0.04] bg-[#0B121F] px-3 py-1.5 text-xs">
                   <span className="text-slate-300 font-medium">{edge.city_a}</span>
-                  <span className="text-amber-400/50 font-mono">↔</span>
+                  <span className="text-sky-400/50 font-mono">↔</span>
                   <span className="text-slate-300 font-medium">{edge.city_b}</span>
                   <button type="button" onClick={() => handleRemoveEdge(i)} title="Supprimer"
                     className="ml-auto rounded p-0.5 text-slate-600 opacity-0 group-hover:opacity-100 hover:text-red-400 transition">
@@ -368,7 +370,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
           )}
 
           {edges.length === 0 && (
-            <p className="mb-3 text-[11px] text-amber-400/60 italic">
+            <p className="mb-3 text-[11px] text-sky-400/60 italic">
               Aucune connexion — cliquez sur Générer pour éviter l'erreur de connexité.
             </p>
           )}
@@ -378,15 +380,15 @@ export default function Form({ onSubmit, loading }: FormProps) {
             <p className="mb-2 text-xs text-slate-500">Ou ajouter manuellement :</p>
             <div className="flex items-center gap-2">
               <select
-                className="flex-1 min-w-0 rounded-lg border border-white/[0.07] bg-[#131C2E] px-2 py-2 text-sm text-slate-200 outline-none focus:border-amber-400/50 transition"
+                className="flex-1 min-w-0 rounded-lg border border-white/[0.07] bg-[#131C2E] px-2 py-2 text-sm text-slate-200 outline-none focus:border-sky-400/50 transition"
                 value={newEdge.city_a} onChange={e => setNewEdge(p => ({ ...p, city_a: e.target.value }))}
               >
                 <option value="">Ville A</option>
                 {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
-              <span className="text-amber-400/60 text-sm shrink-0">↔</span>
+              <span className="text-sky-400/60 text-sm shrink-0">↔</span>
               <select
-                className="flex-1 min-w-0 rounded-lg border border-white/[0.07] bg-[#131C2E] px-2 py-2 text-sm text-slate-200 outline-none focus:border-amber-400/50 transition"
+                className="flex-1 min-w-0 rounded-lg border border-white/[0.07] bg-[#131C2E] px-2 py-2 text-sm text-slate-200 outline-none focus:border-sky-400/50 transition"
                 value={newEdge.city_b} onChange={e => setNewEdge(p => ({ ...p, city_b: e.target.value }))}
               >
                 <option value="">Ville B</option>
@@ -395,7 +397,7 @@ export default function Form({ onSubmit, loading }: FormProps) {
                 ))}
               </select>
               <button type="button" onClick={handleAddEdge}
-                className="rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-sm font-semibold text-amber-400 transition hover:border-amber-400/40 hover:bg-amber-400/10 whitespace-nowrap">
+                className="rounded-lg border border-sky-400/20 bg-sky-400/5 px-3 py-2 text-sm font-semibold text-sky-400 transition hover:border-sky-400/40 hover:bg-sky-400/10 whitespace-nowrap">
                 + Relier
               </button>
             </div>
@@ -421,15 +423,32 @@ export default function Form({ onSubmit, loading }: FormProps) {
 
       {/* Algorithme */}
       <div className="mb-5">
-        <label className="block mb-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">Algorithme</label>
+        <label className="mb-2 flex items-baseline justify-between text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+          <span>Algorithme</span>
+          <span className="font-mono text-[9px] tracking-normal normal-case text-slate-600">
+            {algorithm === "all" ? "compare 4" : "focus 1"}
+          </span>
+        </label>
         <select
           className="w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 text-sm text-slate-200 outline-none focus:border-sky-400/50 focus:bg-white/[0.04] transition"
-          value={algorithm} onChange={e => setAlgorithm(e.target.value as Algorithm)}
+          value={algorithm} onChange={e => setAlgorithm(e.target.value as AlgorithmSelection)}
         >
-          {ALGORITHM_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
+          <optgroup label="Benchmark">
+            {ALGORITHM_OPTIONS.filter(o => o.group === "Benchmark").map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </optgroup>
+          <optgroup label="Focus sur un algorithme">
+            {ALGORITHM_OPTIONS.filter(o => o.group === "Focus").map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </optgroup>
         </select>
+        <p className="mt-1.5 text-[10px] text-slate-600 leading-relaxed">
+          {algorithm === "all"
+            ? "Lance les 4 algorithmes et garde le meilleur résultat."
+            : "Lance uniquement l'algorithme sélectionné."}
+        </p>
       </div>
 
       {/* Submit */}
